@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+</head>
+<body>
+{{template "header"}}
+<div>
+    <ul>
+    {{range .}}
+        <li>{{.ID}} - {{.Title}} 
+            {{.GetCurrentSum}} 
+            {{if .HasPlan }}
+                {{.Plan}}
+            {{end}}
+            <a href="localhost:8080/invoices/update?.ID">(update)</a> /   <a href="localhost:8080/invoices/delete?.ID">(delete)</a>
+        </li>
+    {{end}}
+    </ul>
+</div>
+<a href="localhost:8080/invoices/add">(Add)</a>
+</body>
+</html>
