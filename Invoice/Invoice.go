@@ -1,4 +1,4 @@
-package entities
+package Invoice
 
 // Invoice ...
 type Invoice struct {

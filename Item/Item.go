@@ -1,4 +1,4 @@
-package entities
+package Item
 
 // Item ...
 type Item struct {
