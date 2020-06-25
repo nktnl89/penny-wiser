@@ -1,26 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
+    <meta charset="UTF-8">
 </head>
 <body>
 {{template "header"}}
 <table>
     <tr>Шапочка</tr>
     {{range .}}
-    <tr>
-        <td>{{.ID}}</td>
-        <td>{{.Title}}</td>
-        <td>{{.GetCurrentSum}}</td>
-        <td>{{if .HasPlan }}
-                {{.Plan}}
-            {{end}}</td>
-        <td><a href="/invoices/update?.ID">(update)</a> /   <a href="/invoices/delete?.ID">(delete)</a>
-        </td>
-    </tr>
+        <tr>
+            <td>{{.ID}}</td>
+            <td>{{.Title}}</td>
+            <td>{{.GetCurrentSum}}</td>
+            <td>{{if .HasAim }}
+                    {{.Aim}}
+                {{end}}</td>
+            <td><a href="/invoices/update?.ID">(update)</a> / <a href="/invoices/delete?.ID">(delete)</a>
+            </td>
+        </tr>
     {{end}}
 
 </table>
-<a href="/invoices/add">(Add)</a>
+<a href="/invoices/update">add invoice</a>
+{{/*{{template "invoice-form"}}*/}}
 </body>
 </html>
