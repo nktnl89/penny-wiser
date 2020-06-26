@@ -8,4 +8,5 @@ type InvoiceRepository interface {
 	FindById(int) (*model.Invoice, error)
 	FindAll() ([]*model.Invoice, error)
 	Update(*model.Invoice) error
+	DeleteById(int) error
 }

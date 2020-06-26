@@ -2,7 +2,6 @@ package apiserver
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/nktnl89/penny-wiser/internal/app/model"
 	"github.com/nktnl89/penny-wiser/internal/app/store"
@@ -37,15 +36,60 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) configureRouter() {
+	s.router.HandleFunc("/dashboard", s.handleInvoices()).Methods("GET")
+
 	s.router.HandleFunc("/invoices", s.handleInvoices()).Methods("GET")
 	s.router.HandleFunc("/invoices/update", s.handleInvoicesUpdate()).Methods("GET")
 	s.router.HandleFunc("/invoices/update/process", s.handleInvoicesUpdateProcess()).Methods("POST")
+	s.router.HandleFunc("/invoices/delete", s.handleItemsDelete()).Methods("GET")
+
+	s.router.HandleFunc("/items", s.handleItems()).Methods("GET")
+	s.router.HandleFunc("/items/update", s.handleItemsUpdate()).Methods("GET")
+	s.router.HandleFunc("/items/update/process", s.handleItemsUpdateProcess()).Methods("POST")
+	s.router.HandleFunc("/periods", s.handlePeriods()).Methods("GET")
+	s.router.HandleFunc("/periods/update", s.handlePeriodsUpdate()).Methods("GET")
+	s.router.HandleFunc("/periods/update/process", s.handlePeriodsUpdateProcess()).Methods("POST")
+}
+
+func (s *server) handlePeriods() http.HandlerFunc {
+	return func(w http.ResponseWriter, request *http.Request) {
+
+	}
+}
+
+func (s *server) handlePeriodsUpdate() http.HandlerFunc {
+	return func(w http.ResponseWriter, request *http.Request) {
+
+	}
+}
+
+func (s *server) handlePeriodsUpdateProcess() http.HandlerFunc {
+	return func(w http.ResponseWriter, request *http.Request) {
+
+	}
+}
+
+func (s *server) handleItems() http.HandlerFunc {
+	return func(w http.ResponseWriter, request *http.Request) {
+
+	}
+}
+
+func (s *server) handleItemsUpdate() http.HandlerFunc {
+	return func(w http.ResponseWriter, request *http.Request) {
+
+	}
+}
+
+func (s *server) handleItemsUpdateProcess() http.HandlerFunc {
+	return func(w http.ResponseWriter, request *http.Request) {
+
+	}
 }
 
 func (s *server) handleInvoices() http.HandlerFunc {
 	return func(w http.ResponseWriter, request *http.Request) {
 		invoices, err := s.store.Invoice().FindAll()
-		fmt.Println(invoices)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -72,9 +116,29 @@ func (s *server) respondAndRedirect(w http.ResponseWriter, r *http.Request, code
 	s.respond(w, r, code, data)
 }
 
+func (s *server) handleItemsDelete() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, _ := strconv.Atoi(r.URL.Query().Get("id"))
+		s.store.Invoice().DeleteById(id)
+		s.respondAndRedirect(w, r, http.StatusSeeOther, nil, "/invoices")
+	}
+}
+
 func (s *server) handleInvoicesUpdate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := s.templates.ExecuteTemplate(w, "invoice-form.gohtml", nil)
+
+		id, _ := strconv.Atoi(r.URL.Query().Get("id"))
+		title := r.URL.Query().Get("title")
+		description := r.URL.Query().Get("description")
+		aim, _ := strconv.Atoi(r.URL.Query().Get("aim"))
+		i := &model.Invoice{
+			ID:          id,
+			Title:       title,
+			Description: description,
+			Aim:         aim,
+		}
+
+		err := s.templates.ExecuteTemplate(w, "invoice-form.gohtml", i)
 		if err != nil {
 			log.Fatalln("template didn't execute: ", err)
 		}

@@ -6,16 +6,31 @@
 <body>
 {{template "header"}}
 <table>
-    <tr>Шапочка</tr>
+    <tr>
+        <td>id</td>
+        <td>title</td>
+        <td>current sum</td>
+        <td>aim</td>
+        <td></td>
+    </tr>
     {{range .}}
-        <tr>
-            <td>{{.ID}}</td>
-            <td>{{.Title}}</td>
-            <td>{{.GetCurrentSum}}</td>
-            <td>{{if .HasAim }}
-                    {{.Aim}}
-                {{end}}</td>
-            <td><a href="/invoices/update?.ID">(update)</a> / <a href="/invoices/delete?.ID">(delete)</a>
+        <tr>{{if .Deleted}}
+                <td><strike>{{.ID}}</strike></td>
+                <td><strike>{{.Title}}</strike></td>
+                <td><strike>{{.GetCurrentSum}}</strike></td>
+                <td><strike>{{if .HasAim }}
+                            {{.Aim}}
+                        {{end}}</strike></td>
+            {{else}}
+                <td>{{.ID}}</td>
+                <td>{{.Title}}</td>
+                <td>{{.GetCurrentSum}}</td>
+                <td>{{if .HasAim }}
+                        {{.Aim}}
+                    {{end}}</td>
+            {{end}}
+            <td><a href="/invoices/update?id={{.ID}}&title={{.Title}}&aim={{.Aim}}">(update)</a> / <a
+                        href="/invoices/delete?id={{.ID}}">(delete)</a>
             </td>
         </tr>
     {{end}}

@@ -8,6 +8,7 @@ type Invoice struct {
 	Title       string `json:"title"`
 	Description string `json:"description,omitempty"`
 	Aim         int    `json:"aim,omitempty"`
+	Deleted     bool   `json:"deleted"`
 }
 
 // HasPlan ...
