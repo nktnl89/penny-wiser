@@ -36,19 +36,27 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) configureRouter() {
-	s.router.HandleFunc("/dashboard", s.handleInvoices()).Methods("GET")
+	s.router.HandleFunc("/dashboard", s.handleDashboard()).Methods("GET")
 
 	s.router.HandleFunc("/invoices", s.handleInvoices()).Methods("GET")
 	s.router.HandleFunc("/invoices/update", s.handleInvoicesUpdate()).Methods("GET")
 	s.router.HandleFunc("/invoices/update/process", s.handleInvoicesUpdateProcess()).Methods("POST")
-	s.router.HandleFunc("/invoices/delete", s.handleItemsDelete()).Methods("GET")
+	s.router.HandleFunc("/invoices/delete", s.handleInvoicesDelete()).Methods("GET")
 
 	s.router.HandleFunc("/items", s.handleItems()).Methods("GET")
 	s.router.HandleFunc("/items/update", s.handleItemsUpdate()).Methods("GET")
 	s.router.HandleFunc("/items/update/process", s.handleItemsUpdateProcess()).Methods("POST")
+	s.router.HandleFunc("/items/delete", s.handleItemsDelete()).Methods("GET")
+
 	s.router.HandleFunc("/periods", s.handlePeriods()).Methods("GET")
 	s.router.HandleFunc("/periods/update", s.handlePeriodsUpdate()).Methods("GET")
 	s.router.HandleFunc("/periods/update/process", s.handlePeriodsUpdateProcess()).Methods("POST")
+}
+
+func (s *server) handleDashboard() http.HandlerFunc {
+	return func(w http.ResponseWriter, request *http.Request) {
+
+	}
 }
 
 func (s *server) handlePeriods() http.HandlerFunc {
@@ -71,19 +79,66 @@ func (s *server) handlePeriodsUpdateProcess() http.HandlerFunc {
 
 func (s *server) handleItems() http.HandlerFunc {
 	return func(w http.ResponseWriter, request *http.Request) {
-
+		items, err := s.store.Item().FindAll()
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = s.templates.ExecuteTemplate(w, "items.gohtml", items)
+		if err != nil {
+			log.Fatalln("template didn't execute: ", err)
+		}
 	}
 }
 
 func (s *server) handleItemsUpdate() http.HandlerFunc {
-	return func(w http.ResponseWriter, request *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, _ := strconv.Atoi(r.URL.Query().Get("id"))
+		title := r.URL.Query().Get("title")
+		i := &model.Item{
+			ID:    id,
+			Title: title,
+		}
 
+		err := s.templates.ExecuteTemplate(w, "item-form.gohtml", i)
+		if err != nil {
+			log.Fatalln("template didn't execute: ", err)
+		}
 	}
 }
 
 func (s *server) handleItemsUpdateProcess() http.HandlerFunc {
-	return func(w http.ResponseWriter, request *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := r.ParseForm(); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+		}
+		id, _ := strconv.Atoi(r.FormValue("id"))
+		title := r.FormValue("title")
 
+		i := &model.Item{
+			Title: title,
+		}
+		if id == 0 {
+			if err := s.store.Item().Create(i); err != nil {
+				s.error(w, r, http.StatusUnprocessableEntity, err)
+				return
+			}
+		} else {
+			i.ID = id
+			if err := s.store.Item().Update(i); err != nil {
+				s.error(w, r, http.StatusUnprocessableEntity, err)
+				return
+			}
+		}
+
+		s.respondAndRedirect(w, r, http.StatusSeeOther, i, "/items")
+	}
+}
+
+func (s *server) handleItemsDelete() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, _ := strconv.Atoi(r.URL.Query().Get("id"))
+		s.store.Item().DeleteById(id)
+		s.respondAndRedirect(w, r, http.StatusSeeOther, nil, "/items")
 	}
 }
 
@@ -116,7 +171,7 @@ func (s *server) respondAndRedirect(w http.ResponseWriter, r *http.Request, code
 	s.respond(w, r, code, data)
 }
 
-func (s *server) handleItemsDelete() http.HandlerFunc {
+func (s *server) handleInvoicesDelete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, _ := strconv.Atoi(r.URL.Query().Get("id"))
 		s.store.Invoice().DeleteById(id)
@@ -126,7 +181,6 @@ func (s *server) handleItemsDelete() http.HandlerFunc {
 
 func (s *server) handleInvoicesUpdate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		id, _ := strconv.Atoi(r.URL.Query().Get("id"))
 		title := r.URL.Query().Get("title")
 		description := r.URL.Query().Get("description")

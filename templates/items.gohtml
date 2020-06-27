@@ -7,17 +7,24 @@
 
 {{template "header"}}
 <table>
-    <tr>Шапочка таблицы</tr>
+    <tr>
+        <td>id</td>
+        <td>title</td>
+        <td></td>
+    </tr>
     {{range .}}
-        <tr>
-            <td>{{.ID}}</td>
-            <td>{{.Title}}</td>
-            <td><a href="/invoices/update?.ID">(update)</a> / <a
-                        href="/invoices/delete?.ID">(delete)</a></td>
-            </li>
+        <tr>{{if .Deleted}}
+                <td><strike>{{.ID}}</strike></td>
+                <td><strike>{{.Title}}</strike></td>
+            {{else}}
+                <td>{{.ID}}</td>
+                <td>{{.Title}}</td>
+            {{end}}
+            <td><a href="/items/update?id={{.ID}}&title={{.Title}}">(update)</a> / <a
+                        href="/items/delete?id={{.ID}}">(delete)</a></td>
         </tr>
     {{end}}
 </table>
-<a href="/items/add">(Add)</a>
+<a href="/items/update">(Add)</a>
 </body>
 </html>

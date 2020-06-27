@@ -10,3 +10,12 @@ type InvoiceRepository interface {
 	Update(*model.Invoice) error
 	DeleteById(int) error
 }
+
+// ItemRepository ...
+type ItemRepository interface {
+	Create(item *model.Item) error
+	FindById(int) (*model.Item, error)
+	FindAll() ([]*model.Item, error)
+	Update(item *model.Item) error
+	DeleteById(int) error
+}
