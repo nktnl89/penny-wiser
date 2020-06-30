@@ -13,9 +13,18 @@ type InvoiceRepository interface {
 
 // ItemRepository ...
 type ItemRepository interface {
-	Create(item *model.Item) error
+	Create(*model.Item) error
 	FindById(int) (*model.Item, error)
 	FindAll() ([]*model.Item, error)
 	Update(item *model.Item) error
+	DeleteById(int) error
+}
+
+// PlanRepository ...
+type PlanRepository interface {
+	Create(*model.Plan) error
+	FindById(int) (*model.Plan, error)
+	FindAll() ([]*model.Plan, error)
+	Update(*model.Plan) error
 	DeleteById(int) error
 }

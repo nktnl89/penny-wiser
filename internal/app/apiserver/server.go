@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type server struct {
@@ -48,9 +49,9 @@ func (s *server) configureRouter() {
 	s.router.HandleFunc("/items/update/process", s.handleItemsUpdateProcess()).Methods("POST")
 	s.router.HandleFunc("/items/delete", s.handleItemsDelete()).Methods("GET")
 
-	s.router.HandleFunc("/periods", s.handlePeriods()).Methods("GET")
-	s.router.HandleFunc("/periods/update", s.handlePeriodsUpdate()).Methods("GET")
-	s.router.HandleFunc("/periods/update/process", s.handlePeriodsUpdateProcess()).Methods("POST")
+	s.router.HandleFunc("/plans", s.handlePlans()).Methods("GET")
+	s.router.HandleFunc("/plans/update", s.handlePlansUpdate()).Methods("GET")
+	s.router.HandleFunc("/plans/update/process", s.handlePlansUpdateProcess()).Methods("POST")
 }
 
 func (s *server) handleDashboard() http.HandlerFunc {
@@ -59,21 +60,85 @@ func (s *server) handleDashboard() http.HandlerFunc {
 	}
 }
 
-func (s *server) handlePeriods() http.HandlerFunc {
+func (s *server) handlePlans() http.HandlerFunc {
 	return func(w http.ResponseWriter, request *http.Request) {
-
+		plans, err := s.store.Plan().FindAll()
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = s.templates.ExecuteTemplate(w, "plans.gohtml", plans)
+		if err != nil {
+			log.Fatalln("template didn't execute: ", err)
+		}
 	}
 }
 
-func (s *server) handlePeriodsUpdate() http.HandlerFunc {
-	return func(w http.ResponseWriter, request *http.Request) {
+func (s *server) handlePlansUpdate() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, _ := strconv.Atoi(r.URL.Query().Get("id"))
+		startDate, _ := time.Parse(time.RFC3339, r.URL.Query().Get("start_date"))
+		finishDate, _ := time.Parse(time.RFC3339, r.URL.Query().Get("finish_date"))
+		sum, _ := strconv.Atoi(r.URL.Query().Get("sum"))
+		closed, _ := strconv.ParseBool(r.URL.Query().Get("closed"))
+		itemId, _ := strconv.Atoi(r.URL.Query().Get("item_id"))
 
+		p := &model.Plan{
+			ID:         id,
+			Sum:        sum,
+			StartDate:  startDate,
+			FinishDate: finishDate,
+			Closed:     closed,
+			Item: &model.Item{
+				ID: itemId,
+			},
+		}
+
+		err := s.templates.ExecuteTemplate(w, "plan-form.gohtml", p)
+		if err != nil {
+			log.Fatalln("template didn't execute: ", err)
+		}
 	}
 }
 
-func (s *server) handlePeriodsUpdateProcess() http.HandlerFunc {
-	return func(w http.ResponseWriter, request *http.Request) {
+func (s *server) handlePlansUpdateProcess() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
+		if err := r.ParseForm(); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+		}
+		id, _ := strconv.Atoi(r.FormValue("id"))
+		startDate, _ := time.Parse(time.RFC3339, r.FormValue("start_date"))
+		finishDate, _ := time.Parse(time.RFC3339, r.FormValue("finish_date"))
+		sum, _ := strconv.Atoi(r.FormValue("sum"))
+		closed, _ := strconv.ParseBool(r.FormValue("closed"))
+		itemId, _ := strconv.Atoi(r.FormValue("item_id"))
+
+		item, err := s.store.Item().FindById(itemId)
+		if err != nil || item == nil {
+			s.error(w, r, http.StatusBadRequest, err)
+		}
+		p := &model.Plan{
+			ID:         id,
+			Sum:        sum,
+			StartDate:  startDate,
+			FinishDate: finishDate,
+			Closed:     closed,
+			Item:       item,
+		}
+		if id == 0 {
+			if err := s.store.Plan().Create(p); err != nil {
+				s.error(w, r, http.StatusUnprocessableEntity, err)
+				return
+			}
+		} else {
+			p.ID = id
+			if err := s.store.Plan().Update(p); err != nil {
+				s.error(w, r, http.StatusUnprocessableEntity, err)
+				return
+			}
+		}
+
+		s.respondAndRedirect(w, r, http.StatusSeeOther, &p, "/plans")
 	}
 }
 
@@ -232,81 +297,3 @@ func (s *server) handleInvoicesUpdateProcess() http.HandlerFunc {
 		s.respondAndRedirect(w, r, http.StatusSeeOther, i, "/invoices")
 	}
 }
-
-//func (s *APIServer) configureLogger() error {
-//	level, err := logrus.ParseLevel(s.config.LogLevel)
-//
-//	if err != nil {
-//		return err
-//	}
-//	s.logger.SetLevel(level)
-//	return nil
-//}
-//
-//func (s *APIServer) configureRouter() {
-//	s.router.HandleFunc("/hello", s.handleHello())
-//	s.router.HandleFunc("/", s.handleDashboard())
-//	s.router.HandleFunc("/invoices", s.handleInvoices())
-//	s.router.HandleFunc("/items", s.handleItems())
-//	//s.router.HandleFunc("/items/add", s.handleItemsAdding())
-//	//s.router.HandleFunc("/plans", s.handlePlans())
-//	//s.router.HandleFunc("/periods", s.handlePeriods())
-//}
-//
-//func (s *APIServer) handleHello() http.HandlerFunc {
-//	return func(writer http.ResponseWriter, request *http.Request) {
-//		_, _ = io.WriteString(writer, "Hello")
-//	}
-//}
-//
-//func (s *APIServer) handleDashboard() http.HandlerFunc {
-//	items := []model.Item{
-//		{0, "Кредит"},
-//		{1, "Кварплата"},
-//	}
-//	return func(w http.ResponseWriter, request *http.Request) {
-//		err := tpl.ExecuteTemplate(w, "items.gohtml", items)
-//		if err != nil {
-//			log.Fatalln("template didn't execute: ", err)
-//		}
-//	}
-//}
-//
-//func (s *APIServer) handleItems() http.HandlerFunc {
-//	items := []model.Item{
-//		{0, "Кредит"},
-//		{1, "Кварплата"},
-//	}
-//	return func(w http.ResponseWriter, request *http.Request) {
-//		err := tpl.ExecuteTemplate(w, "items.gohtml", items)
-//		if err != nil {
-//			log.Fatalln("template didn't execute: ", err)
-//		}
-//	}
-//}
-//
-//func (s *APIServer) itemsAdding() http.HandlerFunc {
-//	//items := []Item{Item{0, "Кредит"}, Item{1, "Кварплата"}}
-//	//
-//	//err := tpl.ExecuteTemplate(res, "items.gohtml", items)
-//	//if err != nil {
-//	//	log.Fatalln("template didn't execute: ", err)
-//	//}
-//}
-//func (s *APIServer) plans() http.HandlerFunc {
-//	//items := []Item{Item{0, "Кредит"}, Item{1, "Кварплата"}}
-//	//
-//	//err := tpl.ExecuteTemplate(res, "items.gohtml", items)
-//	//if err != nil {
-//	//	log.Fatalln("template didn't execute: ", err)
-//	//}
-//}
-//func (s *APIServer) periods() http.HandlerFunc {
-//	//items := []Item{Item{0, "Кредит"}, Item{1, "Кварплата"}}
-//	//
-//	//err := tpl.ExecuteTemplate(res, "items.gohtml", items)
-//	//if err != nil {
-//	//	log.Fatalln("template didn't execute: ", err)
-//	//}
-//}
-//

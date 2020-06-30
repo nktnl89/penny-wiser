@@ -4,4 +4,5 @@ package store
 type Store interface {
 	Invoice() InvoiceRepository
 	Item() ItemRepository
+	Plan() PlanRepository
 }

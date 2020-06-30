@@ -1,25 +1,37 @@
-{{define "plan-form"}}
-    <form action="/plans/update" method="post">
-        <table>
-            <tr>
-                <td>id</td>
-                <td><input type="text" name="id" id="id"/></td>
-            </tr>
-            <tr>
-                <td>title</td>
-                <td><input type="text" name="title" id="title"/></td>
-            </tr>
-            <tr>
-                <td>description</td>
-                <td><input type="text" name="description" id="description"/></td>
-            </tr>
-            <tr>
-                <td>aim</td>
-                <td><input type="text" name="aim" id="aim"/></td>
-            </tr>
-            <tr>
-                <td><input type="submit" name="submit-btn" value="add"></td>
-            </tr>
-        </table>
-    </form>
-{{end}}
+{{/*{{define "plan-form"}}*/}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<form action="/plans/update/process" method="post">
+    <table>
+        <tr>
+            <td>id</td>
+            <td><input type="text" name="id" id="id" value="{{.ID}}"/></td>
+        </tr>
+        <tr>
+            <td>start date</td>
+            <td><input type="text" name="start_date" id="start_date" value="{{.StartDate}}"/></td>
+        </tr>
+        <tr>
+            <td>finish date</td>
+            <td><input type="text" name="finish_date" id="finish_date" value="{{.FinishDate}}"/></td>
+        </tr>
+        <tr>
+            <td>sum</td>
+            <td><input type="text" name="sum" id="sum" value="{{.Sum}}"/></td>
+        </tr>
+        <tr>
+            <td>item id</td>
+            <td><input type="text" name="item_id" id="item_id" value="{{.Item.ID}}"/></td>
+        </tr>
+        <tr>
+            <td><input type="submit" name="submit-btn" value="go">
+            </td>
+        </tr>
+    </table>
+</form>
+</body>
+{{/*{{end}}*/}}

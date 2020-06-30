@@ -12,6 +12,7 @@ type Store struct {
 	db                *sql.DB
 	invoiceRepository *InvoiceRepository
 	itemRepository    *ItemRepository
+	planRepository    *PlanRepository
 }
 
 // New ...
@@ -41,4 +42,15 @@ func (s *Store) Item() store.ItemRepository {
 		store: s,
 	}
 	return s.itemRepository
+}
+
+// Item ...
+func (s *Store) Plan() store.PlanRepository {
+	if s.planRepository != nil {
+		return s.planRepository
+	}
+	s.planRepository = &PlanRepository{
+		store: s,
+	}
+	return s.planRepository
 }

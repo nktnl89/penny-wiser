@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+{{template "header"}}
+<table>
+    <tr>Шапочка таблицы</tr>
+    {{range .}}
+        <tr>
+            <td><a href="/plans/?id={{.ID}}">{{.StartDate}} - {{.FinishDate}}</a></td>
+            <td><a href="/plans/close?id={{.ID}}">(close period)</a></td>
+        </tr>
+    {{end}}
+</table>
+<a href="/plans/update">(Add)</a>
+</body>
+</html>
