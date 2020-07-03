@@ -7,10 +7,13 @@
 
 {{template "header"}}
 <table>
-    <tr>Шапочка таблицы</tr>
+    <tr>
+        <td>periods</td>
+        <td></td>
+    </tr>
     {{range .}}
         <tr>
-            <td><a href="/plans/?id={{.ID}}">{{.StartDate}} - {{.FinishDate}}</a></td>
+            <td><a href="/plans/?id={{.ID}}">{{.GetFormattedStartDate}} - {{.GetFormattedFinishDate}}</a></td>
             <td><a href="/plans/close?id={{.ID}}">(close period)</a></td>
         </tr>
     {{end}}

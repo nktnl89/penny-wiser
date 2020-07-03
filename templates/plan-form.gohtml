@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
 </head>
 <body>
+
 <form action="/plans/update/process" method="post">
     <table>
         <tr>
@@ -25,7 +26,14 @@
         </tr>
         <tr>
             <td>item id</td>
-            <td><input type="text" name="item_id" id="item_id" value="{{.Item.ID}}"/></td>
+            <td>
+                <ul id="form_items">
+                    {{range $plan_items := .Items}}
+                        <li value="{{$plan_items.ID}}">{{$plan_items.Title}}</li>
+                    {{end}}
+                </ul>
+            </td>
+
         </tr>
         <tr>
             <td><input type="submit" name="submit-btn" value="go">
@@ -33,5 +41,38 @@
         </tr>
     </table>
 </form>
+
+<select id="item_id">
+    {{range $items := .AllItems}}
+        <option value="{{$items.ID}}">{{$items.Title}}</option>
+    {{end}}
+</select>
+<input type="text" name="item_sum" id="item_sum"/>
+<button id="item_add" onclick="f()">add item</button>
+
 </body>
+<script>
+    function f() {
+        let e = document.getElementById("item_add");
+        let xhr = new XMLHttpRequest();
+
+        let item = document.getElementById('item_id')
+        xhr.onreadystatechange = function () {
+            console.log(xhr.responseText);
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                let i = document.getElementById('form_items');
+                let new_i = document.createElement('li');
+                new_i.value = xhr.responseText;
+                new_i.text = xhr.responseText;
+
+                i.appendChild(new_i);
+            }
+        }
+        xhr.open("POST", "/add", true);
+        try {
+            xhr.send(item.options[item.selectedIndex].value);
+        } catch (err) { /* handle error */
+        }
+    }
+</script>
 {{/*{{end}}*/}}

@@ -18,6 +18,7 @@ type ItemRepository interface {
 	FindAll() ([]*model.Item, error)
 	Update(item *model.Item) error
 	DeleteById(int) error
+	FindAllByID([]int) []*model.Item
 }
 
 // PlanRepository ...

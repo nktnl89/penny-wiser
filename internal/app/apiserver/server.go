@@ -2,11 +2,13 @@ package apiserver
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/nktnl89/penny-wiser/internal/app/model"
 	"github.com/nktnl89/penny-wiser/internal/app/store"
 	"github.com/sirupsen/logrus"
 	"html/template"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -52,11 +54,26 @@ func (s *server) configureRouter() {
 	s.router.HandleFunc("/plans", s.handlePlans()).Methods("GET")
 	s.router.HandleFunc("/plans/update", s.handlePlansUpdate()).Methods("GET")
 	s.router.HandleFunc("/plans/update/process", s.handlePlansUpdateProcess()).Methods("POST")
+	s.router.HandleFunc("/add", s.handleAddItem()).Methods("POST")
 }
 
 func (s *server) handleDashboard() http.HandlerFunc {
 	return func(w http.ResponseWriter, request *http.Request) {
+		// тут берем ентриес всякие и выводим текущее состояние по планам
+	}
+}
 
+func (s *server) handleAddItem() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		bs, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		sbs := string(bs)
+		fmt.Println("USERNAME: ", sbs)
+
+		_, _ = w.Write([]byte(sbs))
 	}
 }
 
@@ -80,17 +97,15 @@ func (s *server) handlePlansUpdate() http.HandlerFunc {
 		finishDate, _ := time.Parse(time.RFC3339, r.URL.Query().Get("finish_date"))
 		sum, _ := strconv.Atoi(r.URL.Query().Get("sum"))
 		closed, _ := strconv.ParseBool(r.URL.Query().Get("closed"))
-		itemId, _ := strconv.Atoi(r.URL.Query().Get("item_id"))
-
+		allItems, _ := s.store.Item().FindAll()
 		p := &model.Plan{
 			ID:         id,
 			Sum:        sum,
 			StartDate:  startDate,
 			FinishDate: finishDate,
 			Closed:     closed,
-			Item: &model.Item{
-				ID: itemId,
-			},
+			Items:      []*model.Item{},
+			AllItems:   allItems,
 		}
 
 		err := s.templates.ExecuteTemplate(w, "plan-form.gohtml", p)
@@ -111,19 +126,23 @@ func (s *server) handlePlansUpdateProcess() http.HandlerFunc {
 		finishDate, _ := time.Parse(time.RFC3339, r.FormValue("finish_date"))
 		sum, _ := strconv.Atoi(r.FormValue("sum"))
 		closed, _ := strconv.ParseBool(r.FormValue("closed"))
-		itemId, _ := strconv.Atoi(r.FormValue("item_id"))
-
-		item, err := s.store.Item().FindById(itemId)
-		if err != nil || item == nil {
-			s.error(w, r, http.StatusBadRequest, err)
+		itemsForm := r.Form["form_items"]
+		allItems, _ := s.store.Item().FindAll()
+		itemIds := make([]int, 0, 1)
+		for _, value := range itemsForm {
+			v, _ := strconv.Atoi(value)
+			itemIds = append(itemIds, v)
 		}
+
+		items := s.store.Item().FindAllByID(itemIds)
 		p := &model.Plan{
 			ID:         id,
 			Sum:        sum,
 			StartDate:  startDate,
 			FinishDate: finishDate,
 			Closed:     closed,
-			Item:       item,
+			Items:      items,
+			AllItems:   allItems,
 		}
 		if id == 0 {
 			if err := s.store.Plan().Create(p); err != nil {

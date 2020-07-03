@@ -1,22 +1,22 @@
 package sqlstore
 
 import (
-	"database/sql"
+	"github.com/jinzhu/gorm"
 	"github.com/nktnl89/penny-wiser/internal/app/store"
 
-	_ "github.com/lib/pq" // ...
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
 // Store ...
 type Store struct {
-	db                *sql.DB
+	db                *gorm.DB
 	invoiceRepository *InvoiceRepository
 	itemRepository    *ItemRepository
 	planRepository    *PlanRepository
 }
 
 // New ...
-func New(db *sql.DB) *Store {
+func New(db *gorm.DB) *Store {
 	return &Store{
 		db: db,
 	}

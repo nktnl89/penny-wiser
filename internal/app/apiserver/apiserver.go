@@ -1,7 +1,7 @@
 package apiserver
 
 import (
-	"database/sql"
+	"github.com/jinzhu/gorm"
 	"github.com/nktnl89/penny-wiser/internal/app/store/sqlstore"
 	"net/http"
 )
@@ -19,12 +19,12 @@ func Start(config *Config) error {
 	return http.ListenAndServe(config.BindAddr, srv)
 }
 
-func newDB(databaseURL string) (*sql.DB, error) {
-	db, err := sql.Open("postgres", databaseURL)
+func newDB(databaseURL string) (*gorm.DB, error) {
+	db, err := gorm.Open("postgres", databaseURL)
 	if err != nil {
 		return nil, err
 	}
-	if err := db.Ping(); err != nil {
+	if err := db.Error; err != nil {
 		return nil, err
 	}
 	return db, nil
