@@ -29,3 +29,11 @@ type PlanRepository interface {
 	Update(*model.Plan) error
 	DeleteById(int) error
 }
+
+// PlanItemRepository ...
+type PlanItemRepository interface {
+	Create(item *model.PlanItem) error
+	FindById(int) (*model.PlanItem, error)
+	Update(*model.PlanItem) error
+	FindAllByPlanID(int) []*model.PlanItem
+}

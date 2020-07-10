@@ -9,10 +9,11 @@ import (
 
 // Store ...
 type Store struct {
-	db                *gorm.DB
-	invoiceRepository *InvoiceRepository
-	itemRepository    *ItemRepository
-	planRepository    *PlanRepository
+	db                 *gorm.DB
+	invoiceRepository  *InvoiceRepository
+	itemRepository     *ItemRepository
+	planRepository     *PlanRepository
+	planItemRepository *PlanItemRepository
 }
 
 // New ...
@@ -53,4 +54,15 @@ func (s *Store) Plan() store.PlanRepository {
 		store: s,
 	}
 	return s.planRepository
+}
+
+// PlanItem ...
+func (s *Store) PlanItem() store.PlanItemRepository {
+	if s.planItemRepository != nil {
+		return s.planItemRepository
+	}
+	s.planItemRepository = &PlanItemRepository{
+		store: s,
+	}
+	return s.planItemRepository
 }

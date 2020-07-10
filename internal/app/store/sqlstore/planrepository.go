@@ -10,8 +10,10 @@ type PlanRepository struct {
 }
 
 // Create ...
-func (r *PlanRepository) Create(p *model.Plan) error {
-	r.store.db.Create(&p)
+func (r *PlanRepository) Create(p *model.Plan) error { //, planItems []*model.PlanItem
+	//r.store.db.Model(&p).Association("plan_items").Append(planItems)
+	r.store.db.Save(&p)
+
 	return nil
 }
 
@@ -25,9 +27,9 @@ func (r *PlanRepository) Update(p *model.Plan) error {
 func (r *PlanRepository) FindById(id int) (*model.Plan, error) {
 	p := &model.Plan{}
 	r.store.db.First(&p, id)
-	items := &[]model.Item{}
-	r.store.db.Preload("items").First(&p)
-	r.store.db.Model(&p).Related(&items, "Items")
+	//items := &[]model.Item{}
+	//r.store.db.Preload("items").First(&p)
+	//r.store.db.Model(&p).Related(&items, "Items")
 
 	//r.store.db.Preload("items").First(&p, "id = ?", 1)
 	return p, nil

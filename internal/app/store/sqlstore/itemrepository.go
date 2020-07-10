@@ -1,7 +1,6 @@
 package sqlstore
 
 import (
-	"fmt"
 	"github.com/nktnl89/penny-wiser/internal/app/model"
 )
 
@@ -50,9 +49,6 @@ func (r *ItemRepository) DeleteById(id int) error {
 // FindAllByID ...
 func (r *ItemRepository) FindAllByID(ids []int) []*model.Item {
 	var items []*model.Item
-	for v, _ := range ids {
-		fmt.Println(v)
-	}
 	if len(ids) == 0 {
 		return items
 	}

@@ -13,7 +13,9 @@
     </tr>
     {{range .}}
         <tr>
-            <td><a href="/plans/?id={{.ID}}">{{.GetFormattedStartDate}} - {{.GetFormattedFinishDate}}</a></td>
+            <td>
+                <a href="/plans/update?id={{.ID}}&start_date={{.GetFormattedStartDate}}&finish_date={{.GetFormattedFinishDate}}&closed={{.Closed}}">{{.GetFormattedStartDate}}
+                    - {{.GetFormattedFinishDate}}</a></td>
             <td><a href="/plans/close?id={{.ID}}">(close period)</a></td>
         </tr>
     {{end}}

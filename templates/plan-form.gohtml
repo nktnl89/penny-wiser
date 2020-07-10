@@ -5,8 +5,7 @@
     <meta charset="UTF-8">
 </head>
 <body>
-
-<form action="/plans/update/process" method="post">
+<div id="plan_part">
     <table>
         <tr>
             <td>id</td>
@@ -21,58 +20,104 @@
             <td><input type="text" name="finish_date" id="finish_date" value="{{.FinishDate}}"/></td>
         </tr>
         <tr>
-            <td>sum</td>
-            <td><input type="text" name="sum" id="sum" value="{{.Sum}}"/></td>
-        </tr>
-        <tr>
             <td>item id</td>
             <td>
                 <ul id="form_items">
-                    {{range $plan_items := .Items}}
-                        <li value="{{$plan_items.ID}}">{{$plan_items.Title}}</li>
+                    {{range $plan_items := .PlanItems}}
+                        <li class="plan_item" item_id="{{$plan_items.ID}}"
+                            item_sum="$plan_items.Sum">{{$plan_items.ItemTitle}}
+                            - {{$plan_items.Sum}}</li>
                     {{end}}
                 </ul>
             </td>
-
         </tr>
-        <tr>
-            <td><input type="submit" name="submit-btn" value="go">
-            </td>
-        </tr>
+        <button id="plan_add" onclick="add_plan()">Запланировать!</button>
     </table>
-</form>
-
-<select id="item_id">
-    {{range $items := .AllItems}}
-        <option value="{{$items.ID}}">{{$items.Title}}</option>
-    {{end}}
-</select>
-<input type="text" name="item_sum" id="item_sum"/>
-<button id="item_add" onclick="f()">add item</button>
-
+</div>
+<div id="add_item_part">
+    <select id="item_id">
+        {{range $items := .AllItems}}
+            <option value="{{$items.ID}}">{{$items.Title}}</option>
+        {{end}}
+    </select>
+    <input type="text" name="item_sum" id="item_sum"/>
+    <button id="item_add" onclick="add_item()">add item</button>
+</div>
 </body>
 <script>
-    function f() {
-        let e = document.getElementById("item_add");
+    function add_item() {
         let xhr = new XMLHttpRequest();
 
         let item = document.getElementById('item_id')
+        let item_sum = document.getElementById('item_sum')
+        let plan_id = document.getElementById('id')
         xhr.onreadystatechange = function () {
             console.log(xhr.responseText);
             if (xhr.readyState === 4 && xhr.status === 200) {
                 let i = document.getElementById('form_items');
                 let new_i = document.createElement('li');
-                new_i.value = xhr.responseText;
-                new_i.text = xhr.responseText;
-
+                let returnResult = JSON.parse(xhr.responseText)
+                new_i.setAttribute("item_id", returnResult.item_id);
+                new_i.setAttribute("item_sum", returnResult.sum);
+                new_i.setAttribute('class', 'plan_item');
+                new_i.innerText = returnResult.item_title + " - " + returnResult.sum;
                 i.appendChild(new_i);
             }
         }
-        xhr.open("POST", "/add", true);
+        xhr.open("POST", "/plans/update/item/add", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        let data = JSON.stringify({
+            item_id: item.options[item.selectedIndex].value,
+            sum: item_sum.value,
+            plan_id: plan_id.value
+        });
+
+        console.log(data);
         try {
-            xhr.send(item.options[item.selectedIndex].value);
-        } catch (err) { /* handle error */
+            xhr.send(data);
+        } catch (err) {
+        }
+    }
+
+    function add_plan() {
+        let xhr = new XMLHttpRequest();
+        let form_items = document.getElementsByClassName("plan_item");
+        console.log(form_items.length - 1
+        );
+        let plan_items = new Array(form_items.childElementCount)
+
+        for (let i = 0; i < form_items.length; i++) {
+            let form_item = form_items.item(i);
+            let plan_item = {
+                item_id: form_item.getAttribute('item_id'),
+                sum: form_item.getAttribute('item_sum'),
+                plan_id: document.getElementById('id').value
+            };
+
+            if (i === 0) {
+                plan_items[0] = plan_item;
+            } else {
+                plan_items.push(plan_item);
+            }
+        }
+        console.log(plan_items);
+
+        xhr.open("POST", "/plans/update/process", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        let data = JSON.stringify({
+            id: document.getElementById('id').value,
+            start_date: document.getElementById('start_date').value,
+            finish_date: document.getElementById('finish_date').value,
+            closed: false,
+            plan_items: plan_items//JSON.stringify(
+        });
+        xhr.onreadystatechange = function () {
+            window.location.replace("/plans");
+        }
+        console.log(data);
+        try {
+            xhr.send(data);
+        } catch (err) {
         }
     }
 </script>
-{{/*{{end}}*/}}

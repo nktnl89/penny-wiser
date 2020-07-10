@@ -5,4 +5,5 @@ type Store interface {
 	Invoice() InvoiceRepository
 	Item() ItemRepository
 	Plan() PlanRepository
+	PlanItem() PlanItemRepository
 }

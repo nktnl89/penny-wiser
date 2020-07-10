@@ -54,7 +54,9 @@ func (s *server) configureRouter() {
 	s.router.HandleFunc("/plans", s.handlePlans()).Methods("GET")
 	s.router.HandleFunc("/plans/update", s.handlePlansUpdate()).Methods("GET")
 	s.router.HandleFunc("/plans/update/process", s.handlePlansUpdateProcess()).Methods("POST")
-	s.router.HandleFunc("/add", s.handleAddItem()).Methods("POST")
+	s.router.HandleFunc("/plans/update/item/add", s.handleAddItem()).Methods("POST")
+	//s.router.HandleFunc("/plans/update", s.handlePlansUpdate()).Methods("GET")
+
 }
 
 func (s *server) handleDashboard() http.HandlerFunc {
@@ -69,11 +71,22 @@ func (s *server) handleAddItem() http.HandlerFunc {
 		if err != nil {
 			fmt.Println(err)
 		}
-
-		sbs := string(bs)
-		fmt.Println("USERNAME: ", sbs)
-
-		_, _ = w.Write([]byte(sbs))
+		planItem := &model.PlanItem{}
+		if err := json.Unmarshal(bs, &planItem); err != nil {
+			panic(err)
+		}
+		item, _ := s.store.Item().FindById(planItem.ItemID)
+		planItem.Item = item
+		planItem.ItemTitle = item.Title
+		if planItem.PlanID != 0 {
+			plan, _ := s.store.Plan().FindById(planItem.PlanID)
+			planItem.Plan = plan
+		}
+		data, err := json.Marshal(planItem)
+		if err != nil {
+			panic(err)
+		}
+		_, _ = fmt.Fprint(w, string(data))
 	}
 }
 
@@ -93,19 +106,39 @@ func (s *server) handlePlans() http.HandlerFunc {
 func (s *server) handlePlansUpdate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, _ := strconv.Atoi(r.URL.Query().Get("id"))
-		startDate, _ := time.Parse(time.RFC3339, r.URL.Query().Get("start_date"))
-		finishDate, _ := time.Parse(time.RFC3339, r.URL.Query().Get("finish_date"))
-		sum, _ := strconv.Atoi(r.URL.Query().Get("sum"))
+		startDateS := r.URL.Query().Get("start_date")
+		startDate, _ := time.Parse("2006-01-02", startDateS)
+		finishDateS := r.URL.Query().Get("finish_date")
+		finishDate, _ := time.Parse("2006-01-02", finishDateS)
 		closed, _ := strconv.ParseBool(r.URL.Query().Get("closed"))
 		allItems, _ := s.store.Item().FindAll()
+
+		var planItems []model.PlanItem
+		if id != 0 {
+			pi := s.store.PlanItem().FindAllByPlanID(id)
+			for _, val := range pi {
+				planItem := &model.PlanItem{
+					ID:        val.ID,
+					PlanID:    val.PlanID,
+					ItemID:    val.ItemID,
+					ItemTitle: val.ItemTitle,
+					Sum:       val.Sum,
+					Item:      val.Item,
+					Plan:      val.Plan,
+				}
+				planItems = append(planItems, *planItem)
+			}
+		}
+
 		p := &model.Plan{
-			ID:         id,
-			Sum:        sum,
-			StartDate:  startDate,
-			FinishDate: finishDate,
-			Closed:     closed,
-			Items:      []*model.Item{},
-			AllItems:   allItems,
+			ID:          id,
+			StartDate:   startDate,
+			StartDateS:  startDateS,
+			FinishDate:  finishDate,
+			FinishDateS: finishDateS,
+			Closed:      closed,
+			PlanItems:   planItems,
+			AllItems:    allItems,
 		}
 
 		err := s.templates.ExecuteTemplate(w, "plan-form.gohtml", p)
@@ -117,47 +150,17 @@ func (s *server) handlePlansUpdate() http.HandlerFunc {
 
 func (s *server) handlePlansUpdateProcess() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		if err := r.ParseForm(); err != nil {
-			s.error(w, r, http.StatusBadRequest, err)
+		bs, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			fmt.Println(err)
 		}
-		id, _ := strconv.Atoi(r.FormValue("id"))
-		startDate, _ := time.Parse(time.RFC3339, r.FormValue("start_date"))
-		finishDate, _ := time.Parse(time.RFC3339, r.FormValue("finish_date"))
-		sum, _ := strconv.Atoi(r.FormValue("sum"))
-		closed, _ := strconv.ParseBool(r.FormValue("closed"))
-		itemsForm := r.Form["form_items"]
-		allItems, _ := s.store.Item().FindAll()
-		itemIds := make([]int, 0, 1)
-		for _, value := range itemsForm {
-			v, _ := strconv.Atoi(value)
-			itemIds = append(itemIds, v)
+		fmt.Println(string(bs))
+		plan := &model.Plan{}
+		if err := json.Unmarshal(bs, plan); err != nil {
+			fmt.Println(err)
 		}
-
-		items := s.store.Item().FindAllByID(itemIds)
-		p := &model.Plan{
-			ID:         id,
-			Sum:        sum,
-			StartDate:  startDate,
-			FinishDate: finishDate,
-			Closed:     closed,
-			Items:      items,
-			AllItems:   allItems,
-		}
-		if id == 0 {
-			if err := s.store.Plan().Create(p); err != nil {
-				s.error(w, r, http.StatusUnprocessableEntity, err)
-				return
-			}
-		} else {
-			p.ID = id
-			if err := s.store.Plan().Update(p); err != nil {
-				s.error(w, r, http.StatusUnprocessableEntity, err)
-				return
-			}
-		}
-
-		s.respondAndRedirect(w, r, http.StatusSeeOther, &p, "/plans")
+		_ = s.store.Plan().Create(plan)
+		s.respondAndRedirect(w, r, http.StatusSeeOther, nil, "/plans")
 	}
 }
 
@@ -213,7 +216,6 @@ func (s *server) handleItemsUpdateProcess() http.HandlerFunc {
 				return
 			}
 		}
-
 		s.respondAndRedirect(w, r, http.StatusSeeOther, i, "/items")
 	}
 }
@@ -221,7 +223,7 @@ func (s *server) handleItemsUpdateProcess() http.HandlerFunc {
 func (s *server) handleItemsDelete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, _ := strconv.Atoi(r.URL.Query().Get("id"))
-		s.store.Item().DeleteById(id)
+		_ = s.store.Item().DeleteById(id)
 		s.respondAndRedirect(w, r, http.StatusSeeOther, nil, "/items")
 	}
 }
@@ -258,7 +260,7 @@ func (s *server) respondAndRedirect(w http.ResponseWriter, r *http.Request, code
 func (s *server) handleInvoicesDelete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, _ := strconv.Atoi(r.URL.Query().Get("id"))
-		s.store.Invoice().DeleteById(id)
+		_ = s.store.Invoice().DeleteById(id)
 		s.respondAndRedirect(w, r, http.StatusSeeOther, nil, "/invoices")
 	}
 }
