@@ -14,10 +14,12 @@ type Store struct {
 	itemRepository     *ItemRepository
 	planRepository     *PlanRepository
 	planItemRepository *PlanItemRepository
+	entryRepository    *EntryRepository
 }
 
 // New ...
 func New(db *gorm.DB) *Store {
+	db.LogMode(true)
 	return &Store{
 		db: db,
 	}
@@ -45,7 +47,7 @@ func (s *Store) Item() store.ItemRepository {
 	return s.itemRepository
 }
 
-// Item ...
+// Plan ...
 func (s *Store) Plan() store.PlanRepository {
 	if s.planRepository != nil {
 		return s.planRepository
@@ -65,4 +67,15 @@ func (s *Store) PlanItem() store.PlanItemRepository {
 		store: s,
 	}
 	return s.planItemRepository
+}
+
+// Entry ...
+func (s *Store) Entry() store.EntryRepository {
+	if s.planItemRepository != nil {
+		return s.entryRepository
+	}
+	s.entryRepository = &EntryRepository{
+		store: s,
+	}
+	return s.entryRepository
 }

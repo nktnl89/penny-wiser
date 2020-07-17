@@ -31,15 +31,15 @@ func (r *InvoiceRepository) FindById(id int) (*model.Invoice, error) {
 // FindAll ...
 func (u *InvoiceRepository) FindAll() ([]*model.Invoice, error) {
 
-	m := []*model.Invoice{
-		{0, "cash", "", 0},
-		{1, "alfa", "", 0},
-	}
-	v := make([]*model.Invoice, 0, len(m))
+	// m := []*model.Invoice{
+	// 	{0, "cash", "", 0},
+	// 	{1, "alfa", "", 0},
+	// }
+	// v := make([]*model.Invoice, 0, len(m))
 
-	for _, value := range m {
-		v = append(v, value)
-	}
+	// for _, value := range m {
+	// 	v = append(v, value)
+	// }
 
-	return v, nil
+	return nil, nil
 }

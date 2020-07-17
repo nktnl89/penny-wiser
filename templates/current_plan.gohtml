@@ -1,0 +1,9 @@
+{{define "current_plan"}}
+<ul id="items">
+    {{range $plan_item := .current_plan.PlanItems}}
+        <li class="plan_item" item_id="{{$plan_item.ID}}"
+            item_sum="$plan_item.Sum">{{$plan_item.Item.Title}}
+            - {{$plan_item.Sum}}</li>
+    {{end}}
+</ul>
+{{end}}

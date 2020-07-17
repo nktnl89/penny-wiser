@@ -1,0 +1,60 @@
+{{define "entries"}}
+<ul id="entries">
+    {{range $entry := .entries}}
+        <li class="entry" entry_id="{{$entry.ID}}" entry_sum="{{$entry.Sum}}" item_title="{{$entry.Item}}">{{$entry.Item.Title}} - {{$entry.Sum}}</li>
+    {{end}}
+</ul>
+<div id="add_item_part">
+    <select id="item_id">
+        {{range $item := .AllItems}}
+            <option value="{{$item.ID}}">{{$item.Title}}</option>
+        {{end}}
+    </select>
+    <select id="invoice_id">
+        {{range $invoice := .AllInvoices}}
+            <option value="{{$invoice.ID}}">{{$invoice.Title}}</option>
+        {{end}}
+    </select>
+    <input type="text" name="entry_sum" id="entry_sum"/>
+    <input type="text" name="entry_date" id="entry_date"/>
+    <button id="entry_add" onclick="entry_add()">add entry</button>
+</div>
+<script>
+    function entry_add() {
+        let xhr = new XMLHttpRequest();
+
+        let item = document.getElementById('item_id')
+        let invoice = document.getElementById('invoice_id')
+        let entry_date = document.getElementById('entry_date')
+        let entry_sum = document.getElementById('entry_sum')
+        //let plan_id = document.getElementById('id') непонятно надо ли план посмотри в ентри в таблице нужно или нет если что текущий план ид
+        // todo сделай контроллер и урл для добавления ентрей и вывода обратно того что добавил
+        xhr.onreadystatechange = function () {
+            console.log(xhr.responseText);
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                let i = document.getElementById('form_items');
+                let new_i = document.createElement('li');
+                let returnResult = JSON.parse(xhr.responseText)
+                new_i.setAttribute("item_id", returnResult.item_id);
+                new_i.setAttribute("item_sum", returnResult.sum);
+                new_i.setAttribute('class', 'plan_item');
+                new_i.innerText = returnResult.item_title + " - " + returnResult.sum;
+                i.appendChild(new_i);
+            }
+        }
+        xhr.open("POST", "/plans/update/item/add", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        let data = JSON.stringify({
+            item_id: item.options[item.selectedIndex].value,
+            sum: item_sum.value,
+            plan_id: plan_id.value
+        });
+
+        console.log(data);
+        try {
+            xhr.send(data);
+        } catch (err) {
+        }
+    }
+</script>
+{{end}}

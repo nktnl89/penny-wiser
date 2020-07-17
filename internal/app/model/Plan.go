@@ -8,14 +8,14 @@ import (
 
 // Plan ...
 type Plan struct {
-	ID          int        `gorm:"primary_key;auto_increment" json:"id,string"`
-	StartDate   time.Time  `gorm:"type:time" json:"-"`
-	FinishDate  time.Time  `gorm:"type:time" json:"-"`
-	StartDateS  string     `gorm:"-" json:"start_date"`
-	FinishDateS string     `gorm:"-" json:"finish_date"`
-	PlanItems   []PlanItem `json:"plan_items,string"` //gorm:"many2many:plan_items"
-	Closed      bool       `json:"closed"`
-	AllItems    []*Item    `gorm:"-" json:"-"`
+	ID          int         `gorm:"primary_key;auto_increment" json:"id,string"`
+	StartDate   time.Time   `gorm:"type:time" json:"-"`
+	FinishDate  time.Time   `gorm:"type:time" json:"-"`
+	StartDateS  string      `gorm:"-" json:"start_date"`
+	FinishDateS string      `gorm:"-" json:"finish_date"`
+	PlanItems   []*PlanItem `gorm:"foreignkey:PlanID" json:"PlanItems,string"`
+	Closed      bool        `json:"closed"`
+	AllItems    []*Item     `gorm:"-" json:"-"`
 }
 
 // GetFormattedStartDate ...

@@ -31,7 +31,6 @@ func (r *PlanItemRepository) FindById(id int) (*model.PlanItem, error) {
 // FindAllByPlanID ...
 func (r *PlanItemRepository) FindAllByPlanID(id int) []*model.PlanItem {
 	var planItems []*model.PlanItem
-
-	r.store.db.Where("plan_id = ?", id).Find(&planItems)
+	r.store.db.Where("plan_id = ?", id).Preload("Item").Find(&planItems)
 	return planItems
 }

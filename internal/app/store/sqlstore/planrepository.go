@@ -26,19 +26,22 @@ func (r *PlanRepository) Update(p *model.Plan) error {
 // FindById ...
 func (r *PlanRepository) FindById(id int) (*model.Plan, error) {
 	p := &model.Plan{}
-	r.store.db.First(&p, id)
-	//items := &[]model.Item{}
-	//r.store.db.Preload("items").First(&p)
-	//r.store.db.Model(&p).Related(&items, "Items")
+	r.store.db.Preload("PlanItems").Preload("PlanItems.Item").First(&p, "id = ?", id)
 
-	//r.store.db.Preload("items").First(&p, "id = ?", 1)
+	return p, nil
+}
+
+// FindCurrentPlan ...
+func (r *PlanRepository) FindCurrentPlan() (*model.Plan, error) {
+	p := &model.Plan{}
+	r.store.db.Preload("PlanItems").Preload("PlanItems.Item").First(&p, "closed = false")
 	return p, nil
 }
 
 // FindAll ...
 func (r *PlanRepository) FindAll() ([]*model.Plan, error) {
 	var plans []*model.Plan
-	r.store.db.Find(&plans)
+	r.store.db.Preload("PlanItems").Preload("PlanItems.Item").Find(&plans)
 	return plans, nil
 }
 

@@ -25,7 +25,7 @@
                 <ul id="form_items">
                     {{range $plan_items := .PlanItems}}
                         <li class="plan_item" item_id="{{$plan_items.ID}}"
-                            item_sum="$plan_items.Sum">{{$plan_items.ItemTitle}}
+                            item_sum="$plan_items.Sum">{{$plan_items.Item.Title}}
                             - {{$plan_items.Sum}}</li>
                     {{end}}
                 </ul>

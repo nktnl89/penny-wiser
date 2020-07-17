@@ -1,6 +1,10 @@
 package store
 
-import "github.com/nktnl89/penny-wiser/internal/app/model"
+import (
+	"time"
+
+	"github.com/nktnl89/penny-wiser/internal/app/model"
+)
 
 // InvoiceRepository ...
 type InvoiceRepository interface {
@@ -28,6 +32,7 @@ type PlanRepository interface {
 	FindAll() ([]*model.Plan, error)
 	Update(*model.Plan) error
 	DeleteById(int) error
+	FindCurrentPlan() (*model.Plan, error)
 }
 
 // PlanItemRepository ...
@@ -36,4 +41,12 @@ type PlanItemRepository interface {
 	FindById(int) (*model.PlanItem, error)
 	Update(*model.PlanItem) error
 	FindAllByPlanID(int) []*model.PlanItem
+}
+
+// EntryRepository ...
+type EntryRepository interface {
+	Create(e *model.Entry) error
+	FindById(id int) (*model.Entry, error)
+	Update(e *model.Entry) error
+	FindAllWithinPeriod(start time.Time, finish time.Time) []*model.Entry
 }

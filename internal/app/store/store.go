@@ -6,4 +6,5 @@ type Store interface {
 	Item() ItemRepository
 	Plan() PlanRepository
 	PlanItem() PlanItemRepository
+	Entry() EntryRepository
 }

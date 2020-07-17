@@ -3,16 +3,17 @@ package apiserver
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/nktnl89/penny-wiser/internal/app/model"
-	"github.com/nktnl89/penny-wiser/internal/app/store"
-	"github.com/sirupsen/logrus"
 	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/nktnl89/penny-wiser/internal/app/model"
+	"github.com/nktnl89/penny-wiser/internal/app/store"
+	"github.com/sirupsen/logrus"
 )
 
 type server struct {
@@ -39,7 +40,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) configureRouter() {
-	s.router.HandleFunc("/dashboard", s.handleDashboard()).Methods("GET")
+	s.router.HandleFunc("/", s.handleDashboard()).Methods("GET")
 
 	s.router.HandleFunc("/invoices", s.handleInvoices()).Methods("GET")
 	s.router.HandleFunc("/invoices/update", s.handleInvoicesUpdate()).Methods("GET")
@@ -55,13 +56,38 @@ func (s *server) configureRouter() {
 	s.router.HandleFunc("/plans/update", s.handlePlansUpdate()).Methods("GET")
 	s.router.HandleFunc("/plans/update/process", s.handlePlansUpdateProcess()).Methods("POST")
 	s.router.HandleFunc("/plans/update/item/add", s.handleAddItem()).Methods("POST")
+	//s.router.HandleFunc("/plans/update/item/delete", s.handleDeleteItem()).Methods("POST") //todo
 	//s.router.HandleFunc("/plans/update", s.handlePlansUpdate()).Methods("GET")
 
 }
 
 func (s *server) handleDashboard() http.HandlerFunc {
-	return func(w http.ResponseWriter, request *http.Request) {
-		// тут берем ентриес всякие и выводим текущее состояние по планам
+	return func(w http.ResponseWriter, r *http.Request) {
+		now := time.Now()
+		currentYear, currentMonth, _ := now.Date()
+		currentLocation := now.Location()
+		firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
+		fmt.Println(firstOfMonth)
+
+		var data map[string]interface{}
+		data = make(map[string]interface{})
+
+		entries := s.store.Entry().FindAllWithinPeriod(firstOfMonth, time.Now())
+		data["entries"] = entries
+
+		currentPlan, _ := s.store.Plan().FindCurrentPlan()
+		data["current_plan"] = currentPlan
+
+		err := s.templates.ExecuteTemplate(w, "dashboard.gohtml", data)
+		if err != nil {
+			log.Fatalln("template didn't execute: ", err)
+		}
+	}
+}
+
+func (s *server) handleDeleteItem() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		//todo если тебе очень захочется и нечего будет делать
 	}
 }
 
@@ -113,32 +139,22 @@ func (s *server) handlePlansUpdate() http.HandlerFunc {
 		closed, _ := strconv.ParseBool(r.URL.Query().Get("closed"))
 		allItems, _ := s.store.Item().FindAll()
 
-		var planItems []model.PlanItem
+		var p *model.Plan
 		if id != 0 {
-			pi := s.store.PlanItem().FindAllByPlanID(id)
-			for _, val := range pi {
-				planItem := &model.PlanItem{
-					ID:        val.ID,
-					PlanID:    val.PlanID,
-					ItemID:    val.ItemID,
-					ItemTitle: val.ItemTitle,
-					Sum:       val.Sum,
-					Item:      val.Item,
-					Plan:      val.Plan,
-				}
-				planItems = append(planItems, *planItem)
+			p, _ = s.store.Plan().FindById(id)
+			p.AllItems = allItems
+		} else {
+			var planItems []*model.PlanItem
+			p = &model.Plan{
+				ID:          id,
+				StartDate:   startDate,
+				StartDateS:  startDateS,
+				FinishDate:  finishDate,
+				FinishDateS: finishDateS,
+				Closed:      closed,
+				PlanItems:   planItems,
+				AllItems:    allItems,
 			}
-		}
-
-		p := &model.Plan{
-			ID:          id,
-			StartDate:   startDate,
-			StartDateS:  startDateS,
-			FinishDate:  finishDate,
-			FinishDateS: finishDateS,
-			Closed:      closed,
-			PlanItems:   planItems,
-			AllItems:    allItems,
 		}
 
 		err := s.templates.ExecuteTemplate(w, "plan-form.gohtml", p)
@@ -159,7 +175,11 @@ func (s *server) handlePlansUpdateProcess() http.HandlerFunc {
 		if err := json.Unmarshal(bs, plan); err != nil {
 			fmt.Println(err)
 		}
-		_ = s.store.Plan().Create(plan)
+		if plan.ID != 0 {
+			s.store.Plan().Update(plan)
+		} else {
+			_ = s.store.Plan().Create(plan)
+		}
 		s.respondAndRedirect(w, r, http.StatusSeeOther, nil, "/plans")
 	}
 }
@@ -170,6 +190,7 @@ func (s *server) handleItems() http.HandlerFunc {
 		if err != nil {
 			log.Fatal(err)
 		}
+
 		err = s.templates.ExecuteTemplate(w, "items.gohtml", items)
 		if err != nil {
 			log.Fatalln("template didn't execute: ", err)

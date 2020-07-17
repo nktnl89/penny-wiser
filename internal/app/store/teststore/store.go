@@ -18,11 +18,11 @@ func New() *Store {
 // Invoice ...
 func (s *Store) Invoice() store.InvoiceRepository {
 	if s.invoiceRepository != nil {
-		return s.invoiceRepository
+		return nil //s.invoiceRepository
 	}
 	s.invoiceRepository = &InvoiceRepository{
 		store:    s,
 		invoices: make(map[int]*model.Invoice),
 	}
-	return s.invoiceRepository
+	return nil //s.invoiceRepository
 }

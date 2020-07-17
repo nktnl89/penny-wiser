@@ -1,32 +1,32 @@
 package sqlstore_test
 
-import (
-	"github.com/nktnl89/penny-wiser/internal/app/model"
-	"github.com/nktnl89/penny-wiser/internal/app/store"
-	"github.com/nktnl89/penny-wiser/internal/app/store/sqlstore"
-	"github.com/stretchr/testify/assert"
-	"testing"
-)
+// import (
+// 	"github.com/nktnl89/penny-wiser/internal/app/model"
+// 	"github.com/nktnl89/penny-wiser/internal/app/store"
+// 	"github.com/nktnl89/penny-wiser/internal/app/store/sqlstore"
+// 	"github.com/stretchr/testify/assert"
+// 	"testing"
+// )
 
-func TestInvoiceRepository_Create(t *testing.T) {
-	db, teardown := sqlstore.TestDB(t, databaseURL)
-	defer teardown("invoices")
+// func TestInvoiceRepository_Create(t *testing.T) {
+// 	db, teardown := sqlstore.TestDB(t, databaseURL)
+// 	defer teardown("invoices")
 
-	s := sqlstore.New(db)
-	i := model.TestInvoice(t)
-	assert.NoError(t, s.Invoice().Create(i))
-	assert.NotNil(t, i)
-}
+// 	s := sqlstore.New(db)
+// 	i := model.TestInvoice(t)
+// 	assert.NoError(t, s.Invoice().Create(i))
+// 	assert.NotNil(t, i)
+// }
 
-func TestInvoiceRepository_FindById_should_fail(t *testing.T) {
-	db, teardown := sqlstore.TestDB(t, databaseURL)
-	defer teardown("invoices")
+// func TestInvoiceRepository_FindById_should_fail(t *testing.T) {
+// 	db, teardown := sqlstore.TestDB(t, databaseURL)
+// 	defer teardown("invoices")
 
-	s := sqlstore.New(db)
-	id := 1
-	_, err := s.Invoice().FindById(id)
-	assert.EqualError(t, err, store.ErrRecordNotFound.Error())
-}
+// 	s := sqlstore.New(db)
+// 	id := 1
+// 	_, err := s.Invoice().FindById(id)
+// 	assert.EqualError(t, err, store.ErrRecordNotFound.Error())
+// }
 
 //func TestInvoiceRepository_FindById(t *testing.T) {
 //	db, teardown := sqlstore.TestDB(t, databaseURL)
