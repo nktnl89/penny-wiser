@@ -15,3 +15,8 @@ type Entry struct {
 	Invoice    *Invoice  `gorm:"foreignkey:InvoiceID" json:"-"`
 	Sum        int       `json:"sum"`
 }
+
+// GetFormattedDate ...
+func (e *Entry) GetFormattedDate() string {
+	return e.EntryDate.Format("2006-01-02")
+}

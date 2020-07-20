@@ -19,7 +19,7 @@ type Store struct {
 
 // New ...
 func New(db *gorm.DB) *Store {
-	db.LogMode(true)
+	db.LogMode(false)
 	return &Store{
 		db: db,
 	}

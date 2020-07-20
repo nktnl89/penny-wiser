@@ -41,6 +41,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) configureRouter() {
 	s.router.HandleFunc("/", s.handleDashboard()).Methods("GET")
+	s.router.HandleFunc("/entries/add", s.handleAddEntry()).Methods("POST") // todo сделай форму и аяксом ее пыщпыщ
 
 	s.router.HandleFunc("/invoices", s.handleInvoices()).Methods("GET")
 	s.router.HandleFunc("/invoices/update", s.handleInvoicesUpdate()).Methods("GET")
@@ -67,7 +68,6 @@ func (s *server) handleDashboard() http.HandlerFunc {
 		currentYear, currentMonth, _ := now.Date()
 		currentLocation := now.Location()
 		firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
-		fmt.Println(firstOfMonth)
 
 		var data map[string]interface{}
 		data = make(map[string]interface{})
@@ -78,10 +78,41 @@ func (s *server) handleDashboard() http.HandlerFunc {
 		currentPlan, _ := s.store.Plan().FindCurrentPlan()
 		data["current_plan"] = currentPlan
 
+		allItems, _ := s.store.Item().FindAll()
+		data["all_items"] = allItems
+
+		allInvoices, _ := s.store.Invoice().FindAll()
+		data["all_invoices"] = allInvoices
+
 		err := s.templates.ExecuteTemplate(w, "dashboard.gohtml", data)
 		if err != nil {
 			log.Fatalln("template didn't execute: ", err)
 		}
+	}
+}
+
+func (s *server) handleAddEntry() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		bs, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			fmt.Println(err)
+		}
+		planItem := &model.PlanItem{}
+		if err := json.Unmarshal(bs, &planItem); err != nil {
+			panic(err)
+		}
+		item, _ := s.store.Item().FindById(planItem.ItemID)
+		planItem.Item = item
+		planItem.ItemTitle = item.Title
+		if planItem.PlanID != 0 {
+			plan, _ := s.store.Plan().FindById(planItem.PlanID)
+			planItem.Plan = plan
+		}
+		data, err := json.Marshal(planItem)
+		if err != nil {
+			panic(err)
+		}
+		_, _ = fmt.Fprint(w, string(data))
 	}
 }
 

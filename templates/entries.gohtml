@@ -1,23 +1,39 @@
 {{define "entries"}}
-<ul id="entries">
+<table id="entries" border="1">
+    <tr>
+        <th>Date</th>
+        <th>Item</th>
+        <th>Invoice</th>
+        <th>Sum</th>
+    </tr>
     {{range $entry := .entries}}
-        <li class="entry" entry_id="{{$entry.ID}}" entry_sum="{{$entry.Sum}}" item_title="{{$entry.Item}}">{{$entry.Item.Title}} - {{$entry.Sum}}</li>
+        <tr class="entry" entry_id="{{$entry.ID}}" entry_sum="{{$entry.Sum}}" item_id="{{$entry.Item.ID}}" invoice_id="{{$entry.Invoice.ID}}">
+            <td>{{.GetFormattedDate}}</td>
+            <td>{{$entry.Item.Title}}</td>
+            <td>{{$entry.Invoice.Title}}</td>
+            <td>{{$entry.Sum}}</td>
+        </tr>
     {{end}}
-</ul>
+</table>
+<br>
 <div id="add_item_part">
-    <select id="item_id">
-        {{range $item := .AllItems}}
-            <option value="{{$item.ID}}">{{$item.Title}}</option>
-        {{end}}
-    </select>
-    <select id="invoice_id">
-        {{range $invoice := .AllInvoices}}
-            <option value="{{$invoice.ID}}">{{$invoice.Title}}</option>
-        {{end}}
-    </select>
-    <input type="text" name="entry_sum" id="entry_sum"/>
-    <input type="text" name="entry_date" id="entry_date"/>
-    <button id="entry_add" onclick="entry_add()">add entry</button>
+    <fieldset>
+        <legend>Добавить запись:</legend>
+            <select id="item_id">
+                {{range $item := .all_items}}
+                    <option value="{{$item.ID}}">{{$item.Title}}</option>
+                {{end}}
+            </select>
+            <select id="invoice_id">
+                {{range $invoice := .all_invoices}}
+                    <option value="{{$invoice.ID}}">{{$invoice.Title}}</option>
+                {{end}}
+            </select>
+            <input type="text" name="entry_sum" id="entry_sum" placeholder="Сумма"/>
+            <input type="text" name="entry_date" id="entry_date" placeholder="Дата гггг-мм-дд"/>
+            <button id="entry_add" onclick="entry_add()">add entry</button>
+        </legend>
+    </fieldset>
 </div>
 <script>
     function entry_add() {
@@ -42,12 +58,13 @@
                 i.appendChild(new_i);
             }
         }
-        xhr.open("POST", "/plans/update/item/add", true);
+        xhr.open("POST", "/entries/add", true);
         xhr.setRequestHeader("Content-Type", "application/json");
         let data = JSON.stringify({
             item_id: item.options[item.selectedIndex].value,
             sum: item_sum.value,
-            plan_id: plan_id.value
+            plan_id: plan_id.value,
+            invoice_id: invoice.value
         });
 
         console.log(data);
